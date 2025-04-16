@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Animação Cultist Priest</title>
+  <style>
+    body {
+      background-color: #111;
+      color: #f0f0f0;
+      text-align: center;
+      font-family: sans-serif;
+    }
+    canvas {
+      background-color: #222;
+      border: 3px solid #fff;
+      margin-top: 30px;
+    }
+    select {
+      padding: 5px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Animação do Cultist Priest</h1>
+  <select id="animationSelector">
+    <option value="idle">Idle</option>
+    <option value="walk">Walk</option>
+    <option value="attack">Attack</option>
+    <option value="die">Die</option>
+    <option value="takehit">Take Hit</option>
+  </select>
+  <canvas id="gameCanvas" width="128" height="128"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const animations = {
+      idle: { frames: 5, prefix: "cultist_priest_idle_", speed: 300 },
+      walk: { frames: 6, prefix: "cultist_priest_walk_", speed: 150 },
+      attack: { frames: 5, prefix: "cultist_priest_attack_", speed: 120 },
+      die: { frames: 6, prefix: "cultist_priest_die_", speed: 200 },
+      takehit: { frames: 4, prefix: "cultist_priest_takehit_", speed: 200 },
+    };
+
+    let currentAnim = "idle";
+    let frameIndex = 0;
+    let lastUpdateTime = 0;
+    const images = {};
+
+    function loadAnimationFrames(animation, callback) {
+      const { frames, prefix } = animations[animation];
+      let loaded = 0;
+      for (let i = 1; i <= frames; i++) {
+        const img = new Image();
+        img.src = `cultist/${prefix}${i}.png`;
+        img.onload = () => {
+          loaded++;
+          if (loaded === frames) callback();
+        };
+        if (!images[animation]) images[animation] = [];
+        images[animation].push(img);
+      }
+    }
+
+    function drawFrame(time) {
+      const anim = animations[currentAnim];
+      if (time - lastUpdateTime > anim.speed) {
+        frameIndex = (frameIndex + 1) % anim.frames;
+        lastUpdateTime = time;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(images[currentAnim][frameIndex], 32, 16, 64, 96);
+
+      requestAnimationFrame(drawFrame);
+    }
+
+    function changeAnimation(anim) {
+      if (anim !== currentAnim) {
+        currentAnim = anim;
+        frameIndex = 0;
+        if (!images[anim]) {
+          loadAnimationFrames(anim, () => {
+            requestAnimationFrame(drawFrame);
+          });
+        }
+      }
+    }
+
+    document.getElementById("animationSelector").addEventListener("change", (e) => {
+      changeAnimation(e.target.value);
+    });
+
+    // Inicializar
+    loadAnimationFrames(currentAnim, () => {
+      requestAnimationFrame(drawFrame);
+    });
+  </script>
+</body>
+</html>
